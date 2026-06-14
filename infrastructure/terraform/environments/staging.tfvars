@@ -1,0 +1,7 @@
+environment     = "staging"
+location        = "Australia East"
+api_cpu         = "0.75"
+api_memory      = "1.5Gi"
+service_cpu     = "0.5"
+service_memory  = "1Gi"
+image_tag       = "staging"

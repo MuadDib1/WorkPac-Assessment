@@ -1,0 +1,5 @@
+environment = "dev"
+location    = "Australia East"
+api_cpu     = "0.5"
+api_memory  = "1Gi"
+image_tag   = "latest"
