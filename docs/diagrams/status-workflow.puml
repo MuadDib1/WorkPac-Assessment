@@ -1,0 +1,53 @@
+@startuml Application Status Workflow
+[*] --> Draft
+Draft --> Submitted : Submit
+Draft --> Withdrawn
+
+Submitted --> UnderReview : Start Review
+Submitted --> Rejected
+Submitted --> OnHold
+Submitted --> Withdrawn
+
+UnderReview --> Shortlisted
+UnderReview --> Rejected
+UnderReview --> OnHold
+UnderReview --> Withdrawn
+
+Shortlisted --> InterviewScheduled
+Shortlisted --> Rejected
+Shortlisted --> Withdrawn
+
+InterviewScheduled --> Interviewed
+InterviewScheduled --> Rejected
+InterviewScheduled --> Withdrawn
+
+Interviewed --> Offered
+Interviewed --> Rejected
+Interviewed --> Withdrawn
+
+Offered --> Accepted
+Offered --> Rejected
+Offered --> Withdrawn
+
+Accepted --> Mobilising
+Accepted --> Rejected
+
+Mobilising --> Placed
+Mobilising --> Rejected
+
+OnHold --> UnderReview : Resume Review
+OnHold --> Rejected
+OnHold --> Withdrawn
+
+state Rejected {
+  [*] --> Rejected
+}
+
+state Withdrawn {
+  [*] --> Withdrawn
+}
+
+state Placed {
+  [*] --> Placed
+}
+@enduml

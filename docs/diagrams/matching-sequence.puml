@@ -1,0 +1,21 @@
+@startuml Matching Sequence
+actor Candidate
+participant "Applications API" as API
+participant "Event Bus" as Bus
+participant "Matching Service" as Matcher
+database "Database" as DB
+
+Candidate -> API: Submit application
+API -> DB: Save application
+API -> Bus: Publish ApplicationSubmittedEvent
+API -> Candidate: 201 Created
+
+Bus -> Matcher: Deliver event
+Matcher -> DB: Load candidate profile
+Matcher -> DB: Load job requirements
+Matcher -> Matcher: Calculate match score
+Matcher -> DB: Save match result
+Matcher -> DB: Update application match score
+Matcher -> Bus: Publish MatchCompletedEvent
+
+@enduml

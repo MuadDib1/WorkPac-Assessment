@@ -1,0 +1,13 @@
+bin/
+obj/
+node_modules/
+*.user
+*.suo
+.vs/
+.idea/
+*.tfstate
+*.tfstate.*
+.DS_Store
+Thumbs.db
+coverage/
+TestResults/

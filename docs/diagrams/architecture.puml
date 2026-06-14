@@ -1,0 +1,40 @@
+@startuml WorkPac Architecture
+!include <C4/C4_Container>
+!include <C4/C4_Context>
+
+Person(candidate, "Candidate", "Job seeker looking for mining/industrial roles")
+Person(recruiter, "Recruiter", "WorkPac recruitment consultant")
+System(clientSystem, "Client Employer", "Mining company hiring workers")
+
+System_Boundary(workpac, "WorkPac Recruitment Platform") {
+    Container(apim, "API Gateway", "Azure APIM", "Auth, rate limiting, routing, versioning")
+
+    Container(applications, "Applications API", "C# .NET 8", "Manage job applications, status workflow")
+    Container(jobs, "Jobs API", "C# .NET 8", "Job posting CRUD, publishing")
+    Container(candidates, "Candidates API", "C# .NET 8", "Candidate profiles, skills, documents")
+    Container(matching, "Matching Service", "C# .NET 8 Worker", "Score-based candidate-job matching")
+    Container(compliance, "Compliance API", "C# .NET 8", "Cert, license, medical verification")
+
+    ContainerDb(sql, "Azure SQL", "SQL Database", "Jobs, applications, candidates, matches")
+    ContainerDb(cosmos, "Cosmos DB", "NoSQL", "Profiles, audit logs (future)")
+    ContainerDb(search, "AI Search", "Search Index", "Full-text job/candidate search")
+
+    ContainerQueue(bus, "Event Bus", "Service Bus / RabbitMQ", "Async event-driven messaging")
+}
+
+Rel(candidate, apim, "Submit application, upload docs, check status", "HTTPS")
+Rel(recruiter, apim, "Review applications, update status, view matches", "HTTPS")
+Rel(clientSystem, apim, "Post jobs, review candidates", "HTTPS")
+
+Rel(apim, applications, "Routes API calls", "HTTP")
+Rel(apim, jobs, "Routes API calls", "HTTP")
+Rel(apim, candidates, "Routes API calls", "HTTP")
+Rel(apim, compliance, "Routes API calls", "HTTP")
+
+Rel(applications, sql, "Read/write applications")
+Rel(applications, bus, "Publish ApplicationSubmittedEvent")
+Rel(matching, bus, "Subscribe ApplicationSubmittedEvent")
+Rel(matching, sql, "Read candidates & jobs, write match results")
+Rel(compliance, sql, "Read/write compliance checks")
+
+@enduml

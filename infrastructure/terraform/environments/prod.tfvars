@@ -1,0 +1,7 @@
+environment     = "prod"
+location        = "Australia East"
+api_cpu         = "1.0"
+api_memory      = "2Gi"
+service_cpu     = "0.75"
+service_memory  = "1Gi"
+image_tag       = "prod"
