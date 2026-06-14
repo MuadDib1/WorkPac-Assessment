@@ -16,7 +16,7 @@ jobs:
         working-directory: infrastructure/terraform
     steps:
       - uses: actions/checkout@v4
-      - uses: hashicorp/setup-terraform@v3
+      - uses: hashicorp/setup-terraform@v4
         with:
           terraform_version: 1.6.0
       - name: Terraform Init
@@ -40,7 +40,7 @@ jobs:
         working-directory: infrastructure/terraform
     steps:
       - uses: actions/checkout@v4
-      - uses: hashicorp/setup-terraform@v3
+      - uses: hashicorp/setup-terraform@v4
         with:
           terraform_version: 1.6.0
       - name: Terraform Init
@@ -62,7 +62,7 @@ jobs:
         working-directory: infrastructure/terraform
     steps:
       - uses: actions/checkout@v4
-      - uses: hashicorp/setup-terraform@v3
+      - uses: hashicorp/setup-terraform@v4
         with:
           terraform_version: 1.6.0
       - name: Terraform Init
