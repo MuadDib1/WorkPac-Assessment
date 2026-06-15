@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Builder;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 using WorkPac.Recruitment.Infrastructure.Data;
 using WorkPac.Recruitment.Infrastructure.Messaging;
 using WorkPac.Recruitment.Infrastructure.Middleware;
@@ -18,29 +19,39 @@ public static class DependencyInjection
         IConfiguration configuration,
         string infrastructureMode = "Local")
     {
-        services.AddDbContext<RecruitmentDbContext>(options =>
-            options.UseSqlServer(configuration.GetConnectionString("Database")));
+        switch (infrastructureMode)
+        {
+            case "Azure":
+                services.AddDbContext<RecruitmentDbContext>(options =>
+                    options.UseSqlServer(configuration.GetConnectionString("Database")));
+                services.AddScoped<IApplicationRepository, SqlServerApplicationRepository>();
+                services.AddScoped<IJobPostingRepository, SqlServerJobPostingRepository>();
+                services.AddScoped<ICandidateRepository, SqlServerCandidateRepository>();
+                services.AddSingleton<IEventBus, RabbitMqEventBus>();
+                services.Configure<RabbitMqOptions>(configuration.GetSection("RabbitMq"));
+                break;
 
-        if (infrastructureMode == "Azure")
-        {
-            services.AddScoped<IApplicationRepository, SqlServerApplicationRepository>();
-            services.AddScoped<IJobPostingRepository, SqlServerJobPostingRepository>();
-            services.AddScoped<ICandidateRepository, SqlServerCandidateRepository>();
-            services.AddSingleton<IEventBus, RabbitMqEventBus>();
-            services.Configure<RabbitMqOptions>(configuration.GetSection("RabbitMq"));
-        }
-        else
-        {
-            services.AddSingleton<IApplicationRepository, InMemoryApplicationRepository>();
-            services.AddSingleton<IJobPostingRepository, InMemoryJobPostingRepository>();
-            services.AddSingleton<ICandidateRepository, InMemoryCandidateRepository>();
-            services.AddSingleton<IEventBus, InMemoryEventBus>();
+            case "RabbitMQ":
+                services.AddSingleton<IApplicationRepository, InMemoryApplicationRepository>();
+                services.AddSingleton<IJobPostingRepository, InMemoryJobPostingRepository>();
+                services.AddSingleton<ICandidateRepository, InMemoryCandidateRepository>();
+                services.AddSingleton<IEventBus, RabbitMqEventBus>();
+                services.Configure<RabbitMqOptions>(configuration.GetSection("RabbitMq"));
+                break;
+
+            default: // "Local"
+                services.AddSingleton<IApplicationRepository, InMemoryApplicationRepository>();
+                services.AddSingleton<IJobPostingRepository, InMemoryJobPostingRepository>();
+                services.AddSingleton<ICandidateRepository, InMemoryCandidateRepository>();
+                services.AddSingleton<IEventBus, InMemoryEventBus>();
+                break;
         }
 
         services.AddScoped<DataSeeder>();
+
         services.AddSingleton<IBlobStorage>(sp =>
         {
-            var logger = sp.GetRequiredService<Microsoft.Extensions.Logging.ILogger<LocalFileBlobStorage>>();
+            var logger = sp.GetRequiredService<ILogger<LocalFileBlobStorage>>();
             return new LocalFileBlobStorage(Path.GetTempPath(), logger);
         });
 

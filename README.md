@@ -21,18 +21,45 @@ See [architecture.md](docs/architecture.md), [data-model.md](docs/data-model.md)
 
 ### Run locally
 
-```bash
-# Start infrastructure (SQL Server, RabbitMQ, Azurite, Seq)
-docker-compose up -d
+A PowerShell run script is provided for convenience:
 
-# Run the API
-dotnet run --project src/Services/WorkPac.Recruitment.Applications.Api
-
-# Run the Matching Service (in another terminal)
-dotnet run --project src/Services/WorkPac.Recruitment.Matching.Service
+```powershell
+.\run.ps1 -All                    # Full end-to-end with RabbitMQ (requires Docker)
+.\run.ps1 -Api -Mode Local        # API only, in-memory (no Docker)
+.\run.ps1 -Infrastructure         # Just start Docker containers
 ```
 
-The API is available at `http://localhost:5001/swagger`
+#### Default mode (InMemory — no Docker required)
+
+```bash
+dotnet run --project src/Services/WorkPac.Recruitment.Applications.Api
+```
+
+The API is available at `http://localhost:5001/swagger`. Data is seeded at startup (5 candidates, 3 jobs, 3 applications with documents). Note: InMemory event bus is per-process, so the Matching Service won't receive events when run separately — use RabbitMQ mode for cross-process matching.
+
+#### RabbitMQ mode (end-to-end matching across services)
+
+```powershell
+.\run.ps1 -All
+```
+
+Or manually:
+
+```bash
+docker compose up -d
+$env:InfrastructureMode="RabbitMQ"
+dotnet run --project src/Services/WorkPac.Recruitment.Applications.Api  # terminal 1
+$env:InfrastructureMode="RabbitMQ"
+dotnet run --project src/Services/WorkPac.Recruitment.Matching.Service   # terminal 2
+```
+
+#### Infrastructure modes
+
+| Mode | Repositories | Event Bus | Storage | Docker required |
+|---|---|---|---|---|
+| `Local` (default) | InMemory | InMemory | Local file | No |
+| `RabbitMQ` | InMemory | RabbitMQ | Local file | RabbitMQ only |
+| `Azure` | SQL Server | RabbitMQ | Local file | All services |
 
 ### Run tests
 
