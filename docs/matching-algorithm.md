@@ -64,6 +64,20 @@ Score = Required_Certs_Held_and_Valid / Total_Required_Certs
 | Certifications | 20% | Site access is impossible without correct compliance docs |
 | Availability | 10% | Immediate availability is nice-to-have but not decisive |
 
+## Test Coverage
+
+Each scorer has dedicated unit tests covering edge cases, and the orchestration service (`ScoringMatchingService`) is tested with mocked dependencies to verify the full flow: load candidate/job → calculate score → save to application → publish `MatchCompletedEvent`. An end-to-end integration test submits an application via the API, manually triggers matching, and asserts `MatchScore` is populated on the response.
+
+| Component | Tests | Key scenarios |
+|---|---|---|
+| `SkillsScorer` | 6 | Jaccard similarity, no skills, case insensitivity |
+| `ExperienceScorer` | 6 | No experience, proportional, cap at 1.0, both zero |
+| `LocationScorer` | 8 | Same site, FIFO willing, same state, no match, case insensitivity |
+| `CertificationsScorer` | 7 | All match, half match, extra certs, no match, case insensitivity |
+| `AvailabilityScorer` | 4 | Active, Placed, Unavailable, Blacklisted |
+| `MatchingEngine` | 12 | Integration of all 5 scorers, perfect match, low match |
+| `ScoringMatchingService` | 3 | Happy path, candidate not found, job not found |
+
 ## Scaling Strategy
 
 ### Phase 1 (Current)

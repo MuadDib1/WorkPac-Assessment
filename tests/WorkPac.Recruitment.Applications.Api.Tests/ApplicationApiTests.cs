@@ -1,11 +1,15 @@
 using FluentAssertions;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 using System.Net;
 using System.Net.Http.Json;
 using WorkPac.Recruitment.Contracts.ApiModels;
+using WorkPac.Recruitment.Matching.Service;
+using WorkPac.Recruitment.Matching.Service.Scoring;
 using WorkPac.Recruitment.Shared.Domain;
 using WorkPac.Recruitment.Shared.Enums;
+using WorkPac.Recruitment.Shared.Interfaces;
 using WorkPac.Recruitment.Shared.ValueObjects;
 
 namespace WorkPac.Recruitment.Applications.Api.Tests;
@@ -279,6 +283,41 @@ public class ApplicationApiTests : IClassFixture<WebApplicationFactory<Program>>
         var paged = await response.Content.ReadFromJsonAsync<PaginatedList<DocumentListItem>>();
         paged.Should().NotBeNull();
         paged!.Items.Should().BeEmpty();
+    }
+
+    [Fact]
+    public async Task SubmitApplication_MatchingCalculatedAndPersisted()
+    {
+        var jobId = await SeedJobPostingAsync("Diesel Fitter");
+        var candidateId = await SeedCandidateAsync("Jack", "Harris");
+        var request = new SubmitApplicationRequest(candidateId, "Experienced diesel fitter", null, null);
+        var createResponse = await _client.PostAsJsonAsync($"/v1/jobs/{jobId}/applications", request);
+        var created = await createResponse.Content.ReadFromJsonAsync<ApplicationResponse>();
+        createResponse.StatusCode.Should().Be(HttpStatusCode.Created);
+
+        var candidateRepo = _factory.Services.GetRequiredService<ICandidateRepository>();
+        var candidate = await candidateRepo.GetByIdAsync(candidateId);
+        typeof(Candidate).GetProperty("Skills")?.SetValue(candidate, new List<string> { "diesel fitting", "hydraulics", "welding" });
+
+        var matchingService = new ScoringMatchingService(
+            _factory.Services.GetRequiredService<IApplicationRepository>(),
+            _factory.Services.GetRequiredService<ICandidateRepository>(),
+            _factory.Services.GetRequiredService<IJobPostingRepository>(),
+            new MatchingEngine(
+                new SkillsScorer(),
+                new ExperienceScorer(),
+                new LocationScorer(),
+                new CertificationsScorer(),
+                new AvailabilityScorer()),
+            _factory.Services.GetRequiredService<IEventBus>(),
+            _factory.Services.GetRequiredService<ILogger<ScoringMatchingService>>());
+
+        await matchingService.CalculateAndSaveMatchAsync(created!.Id, jobId, candidateId, default);
+
+        var appResponse = await _client.GetAsync($"/v1/applications/{created.Id}");
+        appResponse.StatusCode.Should().Be(HttpStatusCode.OK);
+        var app = await appResponse.Content.ReadFromJsonAsync<ApplicationResponse>();
+        app!.MatchScore.Should().BeGreaterThan(0);
     }
 
     private async Task<(Guid appId, string candidateName)> SeedApplicationWithDocumentsAsync(int documentCount, string prefix = "doc")

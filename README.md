@@ -81,9 +81,9 @@ src/
     ├── WorkPac.Recruitment.Matching.Service/      # Scoring engine
     └── WorkPac.Recruitment.Compliance.Api/        # Compliance stub
 tests/
-├── Matching.Service.Tests/    # Unit tests for matching engine
-├── Applications.Api.Tests/    # Integration tests
-└── Architecture.Tests/        # Architectural constraint tests
+├── Matching.Service.Tests/    # 46 tests — unit + orchestration (scorers, engine, service)
+├── Applications.Api.Tests/    # 18 integration tests (incl. end-to-end matching flow)
+└── Architecture.Tests/        # 5 architectural constraint tests
 infrastructure/
 └── terraform/                 # Azure IaC (illustrative)
 .github/workflows/             # CI/CD pipelines
@@ -166,7 +166,15 @@ Local dev uses hardcoded `/v1` prefixes. Production would add `Microsoft.AspNetC
 
 `Score = 0.30×Skills + 0.25×Experience + 0.15×Location + 0.20×Certifications + 0.10×Availability`
 
-See [matching-algorithm.md](docs/matching-algorithm.md) for full details.
+See [matching-algorithm.md](docs/matching-algorithm.md) for full details. The matching engine, all 5 individual scorers, and the orchestration service are covered by **46 unit and integration tests**.
+
+## Test Coverage
+
+| Test project | Tests | Scope |
+|---|---|---|
+| `Matching.Service.Tests` | 46 | Scorers (Skills, Experience, Location, Certifications, Availability), MatchingEngine integration, ScoringMatchingService orchestration |
+| `Applications.Api.Tests` | 18 | API integration tests including end-to-end matching (submit → score → verify MatchScore) |
+| `Architecture.Tests` | 5 | Project dependency constraints (Shared doesn't reference Infrastructure, etc.) |
 
 ## Deployment
 
@@ -248,14 +256,14 @@ Key resources defined in `main.tf`:
 
 | Stage | Gate | Tool |
 |---|---|---|
-| **Local** | Build + all tests pass | `dotnet build && dotnet test` |
+| **Local** | Build + all 69 tests pass | `dotnet build && dotnet test` |
 | **PR** | Code style consistency | `.editorconfig` + `dotnet format --verify-no-changes` |
 | **PR** | Architecture constraints | NetArchTest (Shared doesn't depend on Infrastructure, etc.) |
 | **PR** | No breaking API changes | OpenAPI diff check (planned) |
 | **PR** | Terraform valid | `terraform validate` + `terraform fmt -check` |
 | **PR** | Container builds | `docker build` succeeds |
 | **Merge to main** | Auto-deploy to dev | CI passes → CD triggers |
-| **Pre-prod** | Smoke tests + integration tests | `dotnet test` against staging environment |
+| **Pre-prod** | Smoke tests + integration + matching flow tests | `dotnet test` against staging environment |
 | **Production** | Canary (10% → 100%) | Monitor error rate + latency before full roll |
 
 ## AI Tools Used

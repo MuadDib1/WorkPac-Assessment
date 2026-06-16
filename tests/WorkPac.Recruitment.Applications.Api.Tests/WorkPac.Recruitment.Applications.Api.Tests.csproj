@@ -25,6 +25,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\src\Services\WorkPac.Recruitment.Applications.Api\WorkPac.Recruitment.Applications.Api.csproj" />
+    <ProjectReference Include="..\..\src\Services\WorkPac.Recruitment.Matching.Service\WorkPac.Recruitment.Matching.Service.csproj" />
     <ProjectReference Include="..\..\src\Infrastructure\WorkPac.Recruitment.Infrastructure\WorkPac.Recruitment.Infrastructure.csproj" />
     <ProjectReference Include="..\..\src\Shared\WorkPac.Recruitment.Shared\WorkPac.Recruitment.Shared.csproj" />
     <ProjectReference Include="..\..\src\Shared\WorkPac.Recruitment.Contracts\WorkPac.Recruitment.Contracts.csproj" />
