@@ -15,7 +15,7 @@ jobs:
       run:
         working-directory: infrastructure/terraform
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - uses: hashicorp/setup-terraform@v3
         with:
           terraform_version: 1.6.0
@@ -39,7 +39,7 @@ jobs:
       run:
         working-directory: infrastructure/terraform
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - uses: hashicorp/setup-terraform@v3
         with:
           terraform_version: 1.6.0
@@ -61,7 +61,7 @@ jobs:
       run:
         working-directory: infrastructure/terraform
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - uses: hashicorp/setup-terraform@v3
         with:
           terraform_version: 1.6.0
